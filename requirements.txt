@@ -1,0 +1,8 @@
+pytest
+requests
+allure-pytest
+fastapi
+uvicorn[standard]
+sqlalchemy
+anthropic
+python-dotenv
