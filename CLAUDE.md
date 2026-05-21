@@ -18,6 +18,28 @@
 | 部署 | Docker + 腾讯云服务器 |
 | CI | GitHub Actions（只跑测试，不做 CD） |
 
+## 开发环境
+
+**IDE：** VS Code
+
+**已安装扩展：**
+
+| 扩展 | ID |
+|------|----|
+| Python | ms-python.python |
+| Pylance | ms-python.vscode-pylance |
+| Python Debugger | ms-python.debugpy |
+| Even Better TOML | tamasfe.even-better-toml |
+| DotENV | mikestead.dotenv |
+| GitLens | eamodio.gitlens |
+| YAML | redhat.vscode-yaml |
+| Docker | ms-azuretools.vscode-docker |
+| REST Client | humao.rest-client |
+| autoDocstring | njpwerner.autodocstring |
+| Markdown All in One | yzhang.markdown-all-in-one |
+| Code Spell Checker | streetsidesoftware.code-spell-checker |
+| Error Lens | usernamehw.errorlens |
+
 ## 目录结构
 
 ```
@@ -85,3 +107,12 @@ smart-api-test-platform/
   - 格式：`<type>(<scope>): <description>`
   - type 取值：`feat` / `fix` / `docs` / `refactor` / `test` / `chore`
   - 示例：`feat(geocode): add boundary test cases for empty address input`
+
+### 工具与配置引导
+
+不提前推荐工具或配置清单。当项目某个具体场景真正需要某个工具/配置时，再引入，并说明：
+1. 为什么这个时间点需要它
+2. 不装/不配的代价是什么
+3. 具体操作步骤（点哪里、输入什么）
+
+已安装的 VS Code 扩展见「开发环境」小节，不重复推荐。
