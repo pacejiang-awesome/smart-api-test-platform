@@ -6,7 +6,7 @@ load_dotenv()
 
 class Config:
     AMAP_BASE_URL = "https://restapi.amap.com/v3"
-    TIMEOUT = 10
+    TIMEOUT = 5
 
     def __init__(self):
         self.amap_api_key = self._require("AMAP_API_KEY")
