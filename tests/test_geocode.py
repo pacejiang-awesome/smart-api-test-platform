@@ -71,3 +71,33 @@ def test_geocode_special_characters():
     assert response.status_code == 200
     assert data["status"] == "1"
     assert int(data["count"]) >= 1
+
+
+@pytest.mark.parametrize("address", [
+    "北京市朝阳区",
+    "上海市浦东新区",
+    "广州市天河区",
+    "成都市武侯区",
+])
+def test_geocode_valid_cities(address):
+    # 接口应对全国主要城市地址普遍返回有效坐标，而非仅对特定城市有效
+    response = client.get("/geocode/geo", params={"address": address})
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["status"] == "1"
+    assert int(data["count"]) >= 1
+
+
+@pytest.mark.parametrize("address", [
+    "",
+    "   ",
+    "xyzabc这个地方根本不存在",
+])
+def test_geocode_invalid_inputs(address):
+    # 各类非法输入均应被拒绝，确保接口错误处理的一致性
+    response = client.get("/geocode/geo", params={"address": address})
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["status"] == "0"
