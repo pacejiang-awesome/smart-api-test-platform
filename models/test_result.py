@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Integer, String, Float, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from core.db import Base
@@ -11,5 +11,5 @@ class TestResult(Base):
     test_name: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, nullable=False)
     duration: Mapped[float] = mapped_column(Float, nullable=False)
-    run_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    run_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     error_message: Mapped[str] = mapped_column(String, nullable=True)

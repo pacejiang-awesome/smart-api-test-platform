@@ -1,6 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+from core.db import SessionLocal, init_db
+from models.test_result import TestResult
 
 app = FastAPI(title="Smart API Test Platform")
+init_db()
+
+
+def get_db():
+    # FastAPI 依赖注入：每个请求得到一个独立 session，请求结束自动关闭
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @app.get("/health")
@@ -10,6 +23,20 @@ def health():
 
 
 @app.get("/results")
-def list_results():
-    # 返回测试执行历史，Week 4 接入 SQLite 后替换为真实数据
-    return {"total": 0, "results": []}
+def list_results(db: Session = Depends(get_db)):
+    # 查询全部测试执行记录，按时间倒序返回
+    rows = db.query(TestResult).order_by(TestResult.run_at.desc()).all()
+    return {
+        "total": len(rows),
+        "results": [
+            {
+                "id": r.id,
+                "test_name": r.test_name,
+                "status": r.status,
+                "duration": r.duration,
+                "run_at": r.run_at.isoformat(),
+                "error_message": r.error_message,
+            }
+            for r in rows
+        ],
+    }
