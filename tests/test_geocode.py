@@ -39,3 +39,35 @@ def test_geocode_gibberish_address():
     assert response.status_code == 200
     assert data["status"] == "0"
     assert data["infocode"] == "30001"
+
+
+def test_geocode_postal_code():
+    # 纯数字邮编应被识别为有效地址输入，而非被当作非法参数拒绝
+    params = {"address": "100000"}
+    response = client.get("/geocode/geo", params=params)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["status"] == "1"
+    assert int(data["count"]) >= 1
+
+
+def test_geocode_oversized_address():
+    # 超长地址不应导致接口报错，验证接口有基本的容错能力
+    params = {"address": "北京市" * 100}
+    response = client.get("/geocode/geo", params=params)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["status"] == "1"
+
+
+def test_geocode_special_characters():
+    # 含特殊符号的地址应被过滤处理，不应导致请求失败
+    params = {"address": "北京市@#¥%天安门"}
+    response = client.get("/geocode/geo", params=params)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["status"] == "1"
+    assert int(data["count"]) >= 1
