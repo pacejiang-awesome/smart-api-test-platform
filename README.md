@@ -1,7 +1,7 @@
 # Smart API Test Platform
 
 API automation testing platform targeting the Amap (高德地图) Open API.
-Explores AI-assisted test case generation using Claude API.
+Explores AI-assisted test case generation using GLM API (glm-4.5-air).
 
 ## Features
 
@@ -9,8 +9,8 @@ Explores AI-assisted test case generation using Claude API.
   (normal / error / boundary / parameterized scenarios)
 - Allure-based HTML test reports
 - FastAPI backend with SQLite persistence for execution history
-- Bootstrap 5 dashboard — test case list, execution history, report links
-- AI module: generates test case drafts from API documentation via Claude API
+- Bootstrap 5 dashboard — test result summary and execution history
+- AI module: generates test case drafts from API documentation via GLM API
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ Explores AI-assisted test case generation using Claude API.
 | Test Framework | pytest · requests · allure-pytest |
 | Backend | FastAPI · SQLite · SQLAlchemy |
 | Frontend | Bootstrap 5 |
-| AI Module | Claude API (anthropic SDK) |
+| AI Module | GLM API (glm-4.5-air) |
 | Deployment | Docker · Tencent Cloud |
 | CI | GitHub Actions |
 
@@ -42,17 +42,18 @@ smart-api-test-platform/
 **Prerequisites:** Python 3.10+, Java 8+ (required by Allure CLI)
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/pacejiang-awesome/smart-api-test-platform.git
 cd smart-api-test-platform
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Copy `.env.example` to `.env` and set your Amap API key:
+Copy `.env.example` to `.env` and fill in your API keys:
 
 ```
-AMAP_API_KEY=your_key_here
+AMAP_API_KEY=your_amap_key
+GLM_API_KEY=your_glm_key
 ```
 
 **Run tests:**
@@ -66,12 +67,19 @@ allure serve allure-results
 uvicorn api.main:app --reload
 ```
 
+**Run with Docker:**
+```bash
+docker build -t smart-api-test-platform .
+docker run --env-file .env -p 8000:8000 smart-api-test-platform
+```
+
 ## Roadmap
 
 - [x] Project scaffolding
-- [ ] Geocoding API — full scenario coverage
-- [ ] POI search tests
-- [ ] FastAPI backend + SQLite persistence
-- [ ] Bootstrap 5 dashboard
-- [ ] AI-assisted test case generation
-- [ ] Docker + Tencent Cloud deployment
+- [x] Geocoding API — full scenario coverage
+- [x] POI search tests
+- [x] FastAPI backend + SQLite persistence
+- [x] Bootstrap 5 dashboard
+- [x] AI-assisted test case generation
+- [x] Docker + Tencent Cloud deployment
+- [ ] GitHub Actions CI

@@ -40,6 +40,38 @@
 | Code Spell Checker | streetsidesoftware.code-spell-checker |
 | Error Lens | usernamehw.errorlens |
 
+## 部署环境
+
+**平台：** 腾讯云轻量应用服务器 · Ubuntu 22.04 LTS  
+**容器名：** `smart-api-test-platform`，端口 8000
+
+**已踩的坑：**
+
+- **Docker Hub 被封**：构建前需配置镜像加速。
+  ```bash
+  echo '{"registry-mirrors":["https://mirror.ccs.tencentyun.com"]}' \
+    | sudo tee /etc/docker/daemon.json
+  sudo systemctl restart docker
+  ```
+- **PyPI 被封**：Dockerfile 中 `pip install` 必须加镜像源，否则下载超时。
+  ```dockerfile
+  RUN pip install --no-cache-dir -i https://mirrors.cloud.tencent.com/pypi/simple -r requirements.txt
+  ```
+- **空目录不入 git**：`web/static/` 等空目录需加 `.gitkeep`，否则 `git clone` 后 `StaticFiles` 启动报 RuntimeError。
+
+**更新部署流程：**
+```bash
+# 本地
+git push
+
+# 服务器
+cd ~/smart-api-test-platform
+git pull
+docker build -t smart-api-test-platform .
+docker stop smart-api-test-platform && docker rm smart-api-test-platform
+docker run -d --name smart-api-test-platform --env-file .env -p 8000:8000 smart-api-test-platform
+```
+
 ## 目录结构
 
 ```
