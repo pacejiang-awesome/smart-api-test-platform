@@ -87,13 +87,22 @@
   </div>
 
   <script>
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function decodeUnicodeEscapes(str) {
       return str.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
     }
 
     function shortName(nodeid) {
       const parts = nodeid.split('::');
-      return decodeUnicodeEscapes(parts.slice(1).join('::'));
+      return escapeHtml(decodeUnicodeEscapes(parts.slice(1).join('::')));
     }
 
     function statusBadge(status) {
@@ -127,11 +136,11 @@
         const tbody = document.getElementById('results-body');
         tbody.innerHTML = data.results.map(r => `
           <tr>
-            <td title="${r.test_name}">${shortName(r.test_name)}</td>
+            <td title="${escapeHtml(r.test_name)}">${shortName(r.test_name)}</td>
             <td>${statusBadge(r.status)}</td>
             <td>${r.duration != null ? r.duration.toFixed(3) : '—'}</td>
             <td class="text-muted small">${r.run_at.replace('T', ' ').slice(0, 19)}</td>
-            <td class="text-danger small">${r.error_message || ''}</td>
+            <td class="text-danger small">${escapeHtml(r.error_message || '')}</td>
           </tr>
         `).join('');
 
