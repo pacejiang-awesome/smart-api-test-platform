@@ -4,7 +4,7 @@
 
 个人技术学习与实验项目，探索 AI 辅助测试工程实践。
 - **被测对象**：高德地图开放平台 API
-- **项目重点探索方向**：集成 Claude API，根据接口文档自动生成测试用例
+- **项目重点探索方向**：集成 GLM API，根据接口文档自动生成测试用例
 - **部署目标**：Docker 容器化，运行在腾讯云服务器，对外提供可访问的 URL
 
 ## 技术栈
@@ -14,7 +14,7 @@
 | 测试框架 | pytest + requests + allure-pytest |
 | 后端服务 | FastAPI + SQLite |
 | 前端展示 | Bootstrap 5 |
-| AI 模块 | Claude API（anthropic SDK） |
+| AI 模块 | GLM API（智谱AI，glm-4.5-air） |
 | 部署 | Docker + 腾讯云服务器 |
 | CI | GitHub Actions（只跑测试，不做 CD） |
 
