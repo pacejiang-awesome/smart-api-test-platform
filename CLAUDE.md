@@ -67,7 +67,7 @@ smart-api-test-platform/
 │   └── test_result.py         # 数据模型
 ├── ai_assist/
 │   ├── __init__.py
-│   └── case_generator.py      # Claude API 自动生成测试用例
+│   └── case_generator.py      # GLM API 自动生成测试用例
 ├── web/
 │   ├── templates/
 │   │   └── index.html         # Bootstrap 5 看板
@@ -108,6 +108,10 @@ smart-api-test-platform/
   - 格式：`<type>(<scope>): <description>`
   - type 取值：`feat` / `fix` / `docs` / `refactor` / `test` / `chore`
   - 示例：`feat(geocode): add boundary test cases for empty address input`
+
+### 调试环境注意事项
+
+涉及国内 API（高德、智谱等）时，若通过 Claude Code Bash 工具直接调用出现超时，优先排查代理设置——需将对应域名加入本地 `NO_PROXY`，不提交到 git。
 
 ### 工具与配置引导
 
