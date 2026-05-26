@@ -1,0 +1,17 @@
+name: Network Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Amap API reachability
+        env:
+          AMAP_API_KEY: ${{ secrets.AMAP_API_KEY }}
+        run: |
+          curl -sf \
+            "https://restapi.amap.com/v3/geocode/geo?address=%E5%8C%97%E4%BA%AC&key=$AMAP_API_KEY" \
+            | python3 -m json.tool
