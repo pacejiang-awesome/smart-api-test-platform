@@ -1,1 +1,153 @@
-<!-- Week 5: Bootstrap 5 dashboard — test case list, execution history, report links -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart API Test Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; }
+    .status-passed  { color: #198754; font-weight: 600; }
+    .status-failed  { color: #dc3545; font-weight: 600; }
+    .status-error   { color: #fd7e14; font-weight: 600; }
+    .card-passed    { border-left: 4px solid #198754; }
+    .card-failed    { border-left: 4px solid #dc3545; }
+    .card-total     { border-left: 4px solid #0d6efd; }
+    .card-rate      { border-left: 4px solid #6f42c1; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+      <span class="navbar-brand mb-0 h1">Smart API Test Platform</span>
+      <span class="text-secondary" id="last-updated"></span>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- 统计摘要 -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card card-total h-100">
+          <div class="card-body">
+            <div class="text-muted small">总用例数</div>
+            <div class="fs-2 fw-bold" id="stat-total">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-passed h-100">
+          <div class="card-body">
+            <div class="text-muted small">通过</div>
+            <div class="fs-2 fw-bold text-success" id="stat-passed">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-failed h-100">
+          <div class="card-body">
+            <div class="text-muted small">失败</div>
+            <div class="fs-2 fw-bold text-danger" id="stat-failed">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-rate h-100">
+          <div class="card-body">
+            <div class="text-muted small">通过率</div>
+            <div class="fs-2 fw-bold text-purple" id="stat-rate">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 结果列表 -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>执行历史</span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="loadResults()">刷新</button>
+      </div>
+      <div class="card-body p-0">
+        <div id="loading" class="text-center py-4 text-muted">加载中...</div>
+        <div id="error-msg" class="alert alert-danger m-3 d-none"></div>
+        <table class="table table-hover mb-0 d-none" id="results-table">
+          <thead class="table-light">
+            <tr>
+              <th>用例名称</th>
+              <th>状态</th>
+              <th>耗时(s)</th>
+              <th>执行时间</th>
+              <th>错误信息</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function decodeUnicodeEscapes(str) {
+      return str.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    }
+
+    function shortName(nodeid) {
+      const parts = nodeid.split('::');
+      return decodeUnicodeEscapes(parts.slice(1).join('::'));
+    }
+
+    function statusBadge(status) {
+      const map = {
+        passed: '<span class="status-passed">✓ passed</span>',
+        failed: '<span class="status-failed">✗ failed</span>',
+        error:  '<span class="status-error">⚠ error</span>',
+      };
+      return map[status] || `<span>${status}</span>`;
+    }
+
+    async function loadResults() {
+      document.getElementById('loading').classList.remove('d-none');
+      document.getElementById('results-table').classList.add('d-none');
+      document.getElementById('error-msg').classList.add('d-none');
+
+      try {
+        const resp = await fetch('/results');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        const passed = data.results.filter(r => r.status === 'passed').length;
+        const failed = data.results.filter(r => r.status !== 'passed').length;
+        const rate   = data.total > 0 ? ((passed / data.total) * 100).toFixed(1) + '%' : '—';
+
+        document.getElementById('stat-total').textContent  = data.total;
+        document.getElementById('stat-passed').textContent = passed;
+        document.getElementById('stat-failed').textContent = failed;
+        document.getElementById('stat-rate').textContent   = rate;
+
+        const tbody = document.getElementById('results-body');
+        tbody.innerHTML = data.results.map(r => `
+          <tr>
+            <td title="${r.test_name}">${shortName(r.test_name)}</td>
+            <td>${statusBadge(r.status)}</td>
+            <td>${r.duration != null ? r.duration.toFixed(3) : '—'}</td>
+            <td class="text-muted small">${r.run_at.replace('T', ' ').slice(0, 19)}</td>
+            <td class="text-danger small">${r.error_message || ''}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('loading').classList.add('d-none');
+        document.getElementById('results-table').classList.remove('d-none');
+        document.getElementById('last-updated').textContent =
+          '更新于 ' + new Date().toLocaleTimeString('zh-CN');
+      } catch (e) {
+        document.getElementById('loading').classList.add('d-none');
+        const el = document.getElementById('error-msg');
+        el.textContent = '加载失败：' + e.message;
+        el.classList.remove('d-none');
+      }
+    }
+
+    loadResults();
+  </script>
+</body>
+</html>

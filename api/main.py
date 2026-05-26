@@ -1,10 +1,18 @@
 from fastapi import FastAPI, Depends
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from core.db import SessionLocal, init_db
 from models.test_result import TestResult
 
 app = FastAPI(title="Smart API Test Platform")
+app.mount("/static", StaticFiles(directory="web/static"), name="static")
 init_db()
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse("web/templates/index.html")
 
 
 def get_db():
