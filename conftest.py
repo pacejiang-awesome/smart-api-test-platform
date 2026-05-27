@@ -43,6 +43,8 @@ def record_result(request, setup_db):
     finally:
         db.close()
 
+    time.sleep(0.3)
+
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
