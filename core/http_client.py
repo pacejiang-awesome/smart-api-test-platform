@@ -11,6 +11,7 @@ class AMapClient:
     def get(self, endpoint: str, params: dict = None) -> requests.Response:
         url = self.base_url + endpoint
 
+        # 解包复制一份新 dict，避免修改调用方传入的原始 params
         merged_params = {**(params or {}), "key": config.amap_api_key}
 
         return self.session.get(

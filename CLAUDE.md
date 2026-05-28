@@ -148,6 +148,7 @@ smart-api-test-platform/
 - 变量、函数名统一使用英文蛇形命名（snake_case）
 - 每条测试用例须有一行中文注释，说明测试意图（写"为什么"，不写"做了什么"）
 - 不在注释中重复描述显而易见的事
+- 新增或修改的非显而易见逻辑（隐含约束、绕过 bug 的 workaround、反直觉的行为）必须加注释说明原因
 - **Git commit message 用英文，遵循 Conventional Commits 规范**：
   - 格式：`<type>(<scope>): <description>`
   - type 取值：`feat` / `fix` / `docs` / `refactor` / `test` / `chore`

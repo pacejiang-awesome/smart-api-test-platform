@@ -31,11 +31,24 @@ def health():
 
 
 @app.get("/results")
-def list_results(db: Session = Depends(get_db)):
-    # 查询全部测试执行记录，按时间倒序返回
-    rows = db.query(TestResult).order_by(TestResult.run_at.desc()).all()
+def list_results(
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+):
+    # 先查总数再分页，确保 total 反映全量记录数而非当前页条数
+    total = db.query(TestResult).count()
+    rows = (
+        db.query(TestResult)
+        .order_by(TestResult.run_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
     return {
-        "total": len(rows),
+        "total": total,
+        "limit": limit,
+        "offset": offset,
         "results": [
             {
                 "id": r.id,

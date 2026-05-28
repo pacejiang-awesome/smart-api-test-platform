@@ -44,6 +44,7 @@ def record_result(request, setup_db):
     finally:
         db.close()
 
+    # 仅对真实外部 API 的用例限速，避免触发高德 QPS 限制
     if request.node.get_closest_marker("integration"):
         delay = float(os.environ.get("API_TEST_DELAY_SECONDS", "0.3"))
         time.sleep(delay)
