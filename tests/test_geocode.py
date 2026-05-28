@@ -56,45 +56,49 @@ def test_geocode_gibberish_address():
 
 @allure.feature("地理编码接口")
 @allure.story("边界场景")
-@allure.title("邮政编码作为地址输入")
+@allure.title("纯数字输入被解释为中文数字并返回匹配结果")
 @pytest.mark.integration
 def test_geocode_postal_code():
-    # 纯数字邮编应被识别为有效地址输入，而非被当作非法参数拒绝
+    # "100000"被高德解释为"十万"，验证纯数字输入不报错且能模糊匹配
     params = {"address": "100000"}
     response = client.get("/geocode/geo", params=params)
     data = response.json()
 
     assert response.status_code == 200
     assert data["status"] == "1"
+    assert data["infocode"] == "10000"
     assert int(data["count"]) >= 1
 
 
 @allure.feature("地理编码接口")
 @allure.story("边界场景")
-@allure.title("超长地址不导致接口报错")
+@allure.title("超长地址被截断后返回有效结果")
 @pytest.mark.integration
 def test_geocode_oversized_address():
-    # 超长地址不应导致接口报错，验证接口有基本的容错能力
+    # 超长重复地址被截断为有效成分，验证接口容错后能返回结果而非崩溃
     params = {"address": "北京市" * 100}
     response = client.get("/geocode/geo", params=params)
     data = response.json()
 
     assert response.status_code == 200
     assert data["status"] == "1"
+    assert data["infocode"] == "10000"
+    assert int(data["count"]) >= 1
 
 
 @allure.feature("地理编码接口")
 @allure.story("边界场景")
-@allure.title("含特殊字符的地址被过滤后正常返回")
+@allure.title("含特殊字符的地址被过滤后返回匹配结果")
 @pytest.mark.integration
 def test_geocode_special_characters():
-    # 含特殊符号的地址应被过滤处理，不应导致请求失败
+    # 特殊符号被过滤后识别出有效地址，验证接口容错后能返回匹配结果
     params = {"address": "北京市@#¥%天安门"}
     response = client.get("/geocode/geo", params=params)
     data = response.json()
 
     assert response.status_code == 200
     assert data["status"] == "1"
+    assert data["infocode"] == "10000"
     assert int(data["count"]) >= 1
 
 
