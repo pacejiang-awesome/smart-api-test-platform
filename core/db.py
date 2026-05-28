@@ -1,7 +1,10 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = "sqlite:///./test_results.db"
+# 允许通过环境变量覆盖，便于不同部署环境使用不同数据库路径
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./test_results.db")
 
 engine = create_engine(
     DATABASE_URL,
