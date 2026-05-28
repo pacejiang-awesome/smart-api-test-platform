@@ -82,4 +82,5 @@ docker run --env-file .env -p 8000:8000 smart-api-test-platform
 - [x] Bootstrap 5 dashboard
 - [x] AI-assisted test case generation
 - [x] Docker + Tencent Cloud deployment
-- [ ] GitHub Actions CI
+- [x] GitHub Actions CI
+- [x] GitHub Actions CD (auto-deploy to Tencent Cloud)
