@@ -6,6 +6,7 @@ from core.http_client import client
 @allure.feature("POI搜索接口")
 @allure.story("正常场景")
 @allure.title("关键词搜索返回匹配结果")
+@pytest.mark.integration
 def test_poi_search_valid_keywords():
     # 验证合法关键词能返回包含 name 和 location 的 POI 列表
     response = client.get("/place/text", params={
@@ -26,6 +27,7 @@ def test_poi_search_valid_keywords():
 @allure.feature("POI搜索接口")
 @allure.story("异常场景")
 @allure.title("空关键词返回参数非法错误")
+@pytest.mark.integration
 def test_poi_search_empty_keywords():
     # 空关键词应被识别为非法参数值，返回 20000 而非静默返回空列表
     response = client.get("/place/text", params={
@@ -43,6 +45,7 @@ def test_poi_search_empty_keywords():
 @allure.feature("POI搜索接口")
 @allure.story("异常场景")
 @allure.title("缺少必填参数返回缺参数错误")
+@pytest.mark.integration
 def test_poi_search_missing_keywords():
     # 缺少 keywords 参数应返回 20001，与空值错误码 20000 区分
     response = client.get("/place/text", params={
@@ -58,6 +61,7 @@ def test_poi_search_missing_keywords():
 
 @allure.feature("POI搜索接口")
 @allure.story("参数化场景")
+@pytest.mark.integration
 @pytest.mark.parametrize("keywords,city", [
     ("麦当劳", "上海"),
     ("地铁站", "广州"),

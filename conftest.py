@@ -1,3 +1,4 @@
+import os
 import time
 import pytest
 from core.config import config
@@ -43,7 +44,9 @@ def record_result(request, setup_db):
     finally:
         db.close()
 
-    time.sleep(0.3)
+    if request.node.get_closest_marker("integration"):
+        delay = float(os.environ.get("API_TEST_DELAY_SECONDS", "0.3"))
+        time.sleep(delay)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
