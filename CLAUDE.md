@@ -105,7 +105,8 @@ smart-api-test-platform/
 │   │   └── index.html         # Bootstrap 5 看板
 │   └── static/
 ├── docs/
-│   └── decisions/             # 技术决策记录
+│   ├── decisions/             # 技术决策记录
+│   └── reviews/               # 外部工具或阶段性回顾产出的评审报告
 ├── allure-results/            # allure 原始数据（.gitignore 排除）
 └── reports/                   # 生成的 HTML 报告
 ```
@@ -130,6 +131,11 @@ smart-api-test-platform/
 - 每个核心模块完成后，在 `docs/decisions/` 下生成一篇决策记录：
   - 文件名格式：`N-模块名.md`（N 为递增序号）
   - 内容：选型理由、放弃的备选方案、关键约束
+- **Bug 修复记录**：
+  - 简单改动：git commit message（`fix` type）已足够
+  - 评审发现的 bug：在对应 `docs/reviews/` 文件末尾追加修复状态
+  - 若 bug 暴露了非显而易见的设计约束：补充进该模块的 `docs/decisions/` 记录
+- **CLAUDE.md 维护**：会话中确立了新的协作约定时，主动提醒开发者将其补充进本文件。
 
 ### 安全原则
 
