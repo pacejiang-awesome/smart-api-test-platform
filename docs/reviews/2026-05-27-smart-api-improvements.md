@@ -237,3 +237,9 @@ This is not a product bug, but it makes test output noisier than necessary.
 7. Harden AI response parsing.
 8. Clean up Docker and README polish.
 
+## 修复状态
+
+| # | 问题 | 状态 |
+|---|------|------|
+| 2 | HTTP client 参数污染（`core/http_client.py`） | ✅ 已修复（c331f57） |
+
