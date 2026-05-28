@@ -241,5 +241,8 @@ This is not a product bug, but it makes test output noisier than necessary.
 
 | # | 问题 | 状态 |
 |---|------|------|
+| 1 | 集成测试与单元测试分离 | ✅ 已完成（8fc6c47） |
 | 2 | HTTP client 参数污染（`core/http_client.py`） | ✅ 已修复（c331f57） |
+| 3 | `/results` 加分页（`limit` / `offset` / `total`） | ✅ 已完成（96d958a） |
+| 5 | sleep 改为可配置（`API_TEST_DELAY_SECONDS`） | ✅ 已完成（8fc6c47） |
 
