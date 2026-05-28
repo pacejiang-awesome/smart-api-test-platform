@@ -54,8 +54,15 @@ def generate_cases(api_spec: dict) -> list[dict]:
     )
     resp.raise_for_status()
 
-    content = resp.json()["choices"][0]["message"]["content"].strip()
+    try:
+        content = resp.json()["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError) as e:
+        raise ValueError(f"Unexpected GLM response structure: {e}\nFull response: {resp.text}") from e
+
     if content.startswith("```"):
         content = content.split("\n", 1)[1].rsplit("```", 1)[0]
 
-    return json.loads(content)
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"GLM did not return valid JSON: {e}\nRaw content: {content}") from e
