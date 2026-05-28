@@ -17,7 +17,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.LIGHTHOUSESSH_PRIVATE_KEY }}
           script: |
             cd ~/smart-api-test-platform
             git pull
