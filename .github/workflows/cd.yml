@@ -1,0 +1,31 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Deploy to Tencent Cloud
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/smart-api-test-platform
+            git pull
+            docker build -t smart-api-test-platform .
+            docker stop smart-api-test-platform || true
+            docker rm smart-api-test-platform || true
+            docker run -d \
+              --name smart-api-test-platform \
+              --env-file .env \
+              -p 8000:8000 \
+              smart-api-test-platform
