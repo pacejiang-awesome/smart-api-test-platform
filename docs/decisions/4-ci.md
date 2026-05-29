@@ -37,3 +37,37 @@
 
 - `pip install` 不加国内镜像——runner 在境外，PyPI 直连正常
 - 仅需 `AMAP_API_KEY` 一个 Secret，`GLM_API_KEY` 未参与测试流程
+
+---
+
+## 排错记录：CD 静默失败导致容器从未更新（2026-05-29）
+
+### 现象
+
+服务器运行的容器长期停留在旧版本，网页只显示 19 条旧测试结果，
+新增的测试文件从未出现在容器内，CI 和 CD 在 Actions 里显示绿色。
+
+### 根本原因
+
+早期为移除 Co-Authored-By 签名做了一次 force push，重写了 git 历史。
+服务器本地仓库未跟上，本地和 remote 各自积累了不同的提交，形成发散。
+
+此后每次 CD 执行 `git pull` 都因无法 fast-forward 而失败，但脚本没有
+对 `git pull` 的退出码做校验，后续的 `docker build` 继续用**旧代码**执行，
+容器表面上重建了，实际内容从未更新。
+
+### 修复
+
+1. 服务器手动执行 `git fetch origin && git reset --hard origin/main` 对齐
+2. CD 脚本将 `git pull` 替换为：
+   ```bash
+   git fetch origin
+   git reset --hard origin/main
+   ```
+   `reset --hard` 无论历史是否发散都能强制对齐，force push 后同样适用。
+
+### 设计约束
+
+**CD 脚本不应使用 `git pull`**。`git pull` 在历史发散时静默失败（退出码非 0
+但脚本 `|| true` 风格会吞掉错误），导致后续步骤用旧代码执行，问题极难察觉。
+部署脚本应始终使用 `git fetch + git reset --hard origin/<branch>`。
