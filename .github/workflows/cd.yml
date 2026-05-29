@@ -29,3 +29,13 @@ jobs:
               --env-file .env \
               -p 8000:8000 \
               smart-api-test-platform
+
+      - name: Run tests in container
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ubuntu
+          key: ${{ secrets.LIGHTHOUSESSH_PRIVATE_KEY }}
+          script: |
+            docker exec smart-api-test-platform pytest -v
