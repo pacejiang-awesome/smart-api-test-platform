@@ -20,7 +20,8 @@ jobs:
           key: ${{ secrets.LIGHTHOUSESSH_PRIVATE_KEY }}
           script: |
             cd ~/smart-api-test-platform
-            git pull
+            git fetch origin
+            git reset --hard origin/main
             docker build -t smart-api-test-platform .
             docker stop smart-api-test-platform || true
             docker rm smart-api-test-platform || true
