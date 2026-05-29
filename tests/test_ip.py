@@ -5,11 +5,12 @@ from core.http_client import client
 
 @allure.feature("IP定位接口")
 @allure.story("正常场景")
-@allure.title("不传 ip 参数，接口用调用方 IP 返回省市")
+@allure.title("国内 IP 返回省市信息")
 @pytest.mark.integration
-def test_ip_no_param():
-    # 缺省 ip 时接口自动用调用方 IP 定位，验证该路径能返回非空字符串省市
-    response = client.get("/ip", params={})
+def test_ip_domestic():
+    # CI runner 在境外，不传 ip 时高德无法定位返回空列表，用已知有归属数据的国内 IP 替代
+    # 新浪北京 202.108.33.32：实测返回 province='北京市'，骨干网 DNS（如 114.114.114.114）反而无归属数据
+    response = client.get("/ip", params={"ip": "202.108.33.32"})
     data = response.json()
 
     assert response.status_code == 200
