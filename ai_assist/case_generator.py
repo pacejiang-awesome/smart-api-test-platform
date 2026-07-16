@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 _DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
-_DEEPSEEK_MODEL = "deepseek-v4-flash"
+_DEEPSEEK_MODEL = "deepseek-v4-pro"
+_MAX_ATTEMPTS = 2
 _REQUIRED_CASE_FIELDS = {"name", "params", "expected", "description"}
 
 _SYSTEM_PROMPT = (
@@ -97,11 +98,14 @@ def _extract_cases(response_data: object) -> list[dict]:
     return _validate_cases(payload)
 
 
-def generate_cases(api_spec: dict) -> list[dict]:
-    api_key = os.environ.get("DEEPSEEK_API_KEY")
-    if not api_key:
-        raise EnvironmentError("DEEPSEEK_API_KEY not found in environment")
-
+def _request_cases(api_spec: dict, api_key: str, is_retry: bool) -> list[dict]:
+    user_prompt = _build_user_prompt(api_spec)
+    if is_retry:
+        user_prompt += (
+            "\n上一次输出未通过 JSON 或字段校验。"
+            "请严格输出一个合法 JSON 对象，确保字符串中的引号已正确转义，"
+            "不要输出 Markdown 代码块或解释文字。"
+        )
     resp = requests.post(
         _DEEPSEEK_URL,
         headers={
@@ -112,7 +116,7 @@ def generate_cases(api_spec: dict) -> list[dict]:
             "model": _DEEPSEEK_MODEL,
             "messages": [
                 {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": _build_user_prompt(api_spec)},
+                {"role": "user", "content": user_prompt},
             ],
             "thinking": {"type": "disabled"},
             "response_format": {"type": "json_object"},
@@ -128,3 +132,18 @@ def generate_cases(api_spec: dict) -> list[dict]:
         raise ValueError("DeepSeek returned a non-JSON HTTP response") from e
 
     return _extract_cases(response_data)
+
+
+def generate_cases(api_spec: dict) -> list[dict]:
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        raise EnvironmentError("DEEPSEEK_API_KEY not found in environment")
+
+    last_error = None
+    for attempt in range(_MAX_ATTEMPTS):
+        try:
+            return _request_cases(api_spec, api_key, is_retry=attempt > 0)
+        except ValueError as e:
+            last_error = e
+
+    raise last_error

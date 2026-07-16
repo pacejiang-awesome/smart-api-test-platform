@@ -6,7 +6,7 @@
 
 ---
 
-## 选型：DeepSeek API（deepseek-v4-flash）
+## 选型：DeepSeek API（deepseek-v4-pro）
 
 ### 为什么不用 Claude API
 
@@ -16,13 +16,14 @@
 
 - 最初选择 GLM 的主要原因是新用户免费额度；额度耗尽后，该选型前提不再成立
 - DeepSeek API 同样兼容 OpenAI Chat Completions 格式，现有 `requests` 调用可以直接迁移，无需增加 SDK
-- `deepseek-v4-flash` 更适合轻量结构化生成；显式关闭思考模式以控制延迟和费用
+- 最初迁移到 `deepseek-v4-flash`，但真实 API 验证中连续返回语法损坏的 JSON，包含加强提示后的重试仍未通过
+- 最终改用 `deepseek-v4-pro` 提高结构化输出可靠性，并显式关闭思考模式以控制延迟和费用
 - 旧模型名 `deepseek-chat` 将于 2026-07-24 停用，因此直接使用 V4 模型名
 
 ### 放弃的方案
 
 - **继续使用 GLM API**：免费额度已经耗尽，继续保留会让 AI 功能不可用
-- **deepseek-v4-pro**：能力更强，但当前任务不需要更高成本和延迟
+- **deepseek-v4-flash**：成本和延迟更低，但本项目的真实 JSON Output 验证连续失败
 - **deepseek-chat**：临近官方停用日期，不应作为新迁移目标
 - **本地模型（Ollama 等）**：部署成本高，与项目"快速验证"的阶段目标不符
 
@@ -55,3 +56,4 @@ DeepSeek 使用 JSON Output 返回 `{"cases": [...]}` 对象，模块校验后�
 - `max_tokens=4096`：为完整 JSON 留出空间，并在 `finish_reason=length` 时明确报截断错误
 - `DEEPSEEK_API_KEY` 通过 `.env` 注入，不硬编码、不提交 git，也不兼容回退到旧 `GLM_API_KEY`
 - 响应异常只记录有限长度预览，不把完整外部响应写入错误信息
+- 模型返回无效 JSON 或不满足字段契约时，用更严格提示最多重试一次；HTTP 错误不重试，避免认证、余额或限流问题产生重复费用

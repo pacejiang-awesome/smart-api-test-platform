@@ -66,7 +66,7 @@ def test_generate_cases_sends_deepseek_request_and_returns_cases(monkeypatch):
     _, kwargs = post.call_args
     assert post.call_args.args == ("https://api.deepseek.com/chat/completions",)
     assert kwargs["headers"]["Authorization"] == "Bearer test-deepseek-key"
-    assert kwargs["json"]["model"] == "deepseek-v4-flash"
+    assert kwargs["json"]["model"] == "deepseek-v4-pro"
     assert kwargs["json"]["thinking"] == {"type": "disabled"}
     assert kwargs["json"]["response_format"] == {"type": "json_object"}
     assert kwargs["json"]["max_tokens"] == 4096
@@ -94,6 +94,34 @@ def test_generate_cases_rejects_non_json_http_response(monkeypatch):
 
     with pytest.raises(ValueError, match="non-JSON HTTP response"):
         case_generator.generate_cases(API_SPEC)
+
+
+def test_generate_cases_retries_invalid_content_once(monkeypatch):
+    # 模型偶发输出非法 JSON 时应加强提示重试，而不是直接丢弃本次生成
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test-deepseek-key")
+    invalid = _response(_completion("not-json"))
+    valid = _response(_completion(json.dumps({"cases": [VALID_CASE]})))
+    post = Mock(side_effect=[invalid, valid])
+    monkeypatch.setattr(case_generator.requests, "post", post)
+
+    result = case_generator.generate_cases(API_SPEC)
+
+    assert result == [VALID_CASE]
+    assert post.call_count == 2
+    retry_prompt = post.call_args_list[1].kwargs["json"]["messages"][1]["content"]
+    assert "上一次输出未通过 JSON 或字段校验" in retry_prompt
+
+
+def test_generate_cases_stops_after_one_retry(monkeypatch):
+    # 连续两次无效时应返回最后一次校验错误，避免失控重试和额外费用
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test-deepseek-key")
+    post = Mock(return_value=_response(_completion("not-json")))
+    monkeypatch.setattr(case_generator.requests, "post", post)
+
+    with pytest.raises(ValueError, match="valid JSON"):
+        case_generator.generate_cases(API_SPEC)
+
+    assert post.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -161,3 +189,4 @@ def test_generate_cases_error_does_not_include_api_key(monkeypatch):
         case_generator.generate_cases(API_SPEC)
 
     assert api_key not in str(exc_info.value)
+    assert case_generator.requests.post.call_count == 2

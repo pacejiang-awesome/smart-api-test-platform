@@ -1,7 +1,7 @@
 # Smart API Test Platform
 
 API automation testing platform targeting the Amap (高德地图) Open API.
-Explores AI-assisted test case generation using DeepSeek API (deepseek-v4-flash).
+Explores AI-assisted test case generation using DeepSeek API (deepseek-v4-pro).
 
 ## Features
 
@@ -19,7 +19,7 @@ Explores AI-assisted test case generation using DeepSeek API (deepseek-v4-flash)
 | Test Framework | pytest · requests · allure-pytest |
 | Backend | FastAPI · SQLite · SQLAlchemy |
 | Frontend | Bootstrap 5 |
-| AI Module | DeepSeek API (deepseek-v4-flash) |
+| AI Module | DeepSeek API (deepseek-v4-pro) |
 | Deployment | Docker · Tencent Cloud |
 | CI | GitHub Actions |
 

@@ -14,7 +14,7 @@
 | 测试框架 | pytest + requests + allure-pytest |
 | 后端服务 | FastAPI + SQLite |
 | 前端展示 | Bootstrap 5 |
-| AI 模块 | DeepSeek API（deepseek-v4-flash，关闭思考模式） |
+| AI 模块 | DeepSeek API（deepseek-v4-pro，关闭思考模式） |
 | 部署 | Docker + 腾讯云服务器 |
 | CI | GitHub Actions（只跑测试，不做 CD） |
 
