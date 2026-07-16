@@ -1,7 +1,7 @@
 # Smart API Test Platform
 
 API automation testing platform targeting the Amap (高德地图) Open API.
-Explores AI-assisted test case generation using GLM API (glm-4.5-air).
+Explores AI-assisted test case generation using DeepSeek API (deepseek-v4-flash).
 
 ## Features
 
@@ -10,7 +10,7 @@ Explores AI-assisted test case generation using GLM API (glm-4.5-air).
 - Allure-based HTML test reports
 - FastAPI backend with SQLite persistence for execution history
 - Bootstrap 5 dashboard — test result summary and execution history
-- AI module: generates test case drafts from API documentation via GLM API
+- AI module: generates test case drafts from API documentation via DeepSeek API
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ Explores AI-assisted test case generation using GLM API (glm-4.5-air).
 | Test Framework | pytest · requests · allure-pytest |
 | Backend | FastAPI · SQLite · SQLAlchemy |
 | Frontend | Bootstrap 5 |
-| AI Module | GLM API (glm-4.5-air) |
+| AI Module | DeepSeek API (deepseek-v4-flash) |
 | Deployment | Docker · Tencent Cloud |
 | CI | GitHub Actions |
 
@@ -53,7 +53,7 @@ Copy `.env.example` to `.env` and fill in your API keys:
 
 ```
 AMAP_API_KEY=your_amap_key
-GLM_API_KEY=your_glm_key
+DEEPSEEK_API_KEY=your_deepseek_key
 ```
 
 **Run tests:**

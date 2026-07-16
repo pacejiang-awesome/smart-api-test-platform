@@ -4,7 +4,7 @@
 
 个人技术学习与实验项目，探索 AI 辅助测试工程实践。
 - **被测对象**：高德地图开放平台 API
-- **项目重点探索方向**：集成 GLM API，根据接口文档自动生成测试用例
+- **项目重点探索方向**：集成 DeepSeek API，根据接口文档自动生成测试用例
 - **部署目标**：Docker 容器化，运行在腾讯云服务器，对外提供可访问的 URL
 
 ## 技术栈
@@ -14,7 +14,7 @@
 | 测试框架 | pytest + requests + allure-pytest |
 | 后端服务 | FastAPI + SQLite |
 | 前端展示 | Bootstrap 5 |
-| AI 模块 | GLM API（智谱AI，glm-4.5-air） |
+| AI 模块 | DeepSeek API（deepseek-v4-flash，关闭思考模式） |
 | 部署 | Docker + 腾讯云服务器 |
 | CI | GitHub Actions（只跑测试，不做 CD） |
 
@@ -99,7 +99,7 @@ smart-api-test-platform/
 │   └── test_result.py         # 数据模型
 ├── ai_assist/
 │   ├── __init__.py
-│   └── case_generator.py      # GLM API 自动生成测试用例
+│   └── case_generator.py      # DeepSeek API 自动生成测试用例
 ├── web/
 │   ├── templates/
 │   │   └── index.html         # Bootstrap 5 看板
@@ -156,7 +156,7 @@ smart-api-test-platform/
 
 ### 调试环境注意事项
 
-涉及国内 API（高德、智谱等）时，若通过 Claude Code Bash 工具直接调用出现超时，优先排查代理设置——需将对应域名加入本地 `NO_PROXY`，不提交到 git。
+涉及国内 API（高德、DeepSeek 等）时，若通过 Claude Code Bash 工具直接调用出现超时，优先排查代理设置——需将对应域名加入本地 `NO_PROXY`，不提交到 git。
 
 ### 工具与配置引导
 

@@ -1,4 +1,4 @@
-# Week 5: GLM API integration — generates test case drafts from API docs
+# AI-assisted test case generation from API specifications
 import json
 import os
 
@@ -7,12 +7,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-_GLM_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-_GLM_MODEL = "glm-4.5-air"
+_DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
+_DEEPSEEK_MODEL = "deepseek-v4-flash"
+_REQUIRED_CASE_FIELDS = {"name", "params", "expected", "description"}
 
 _SYSTEM_PROMPT = (
     "你是一个 API 测试专家。根据用户提供的接口信息，生成测试用例。"
-    "只输出 JSON 数组，不要任何解释文字。"
+    "只输出 JSON 对象，不要任何解释文字。JSON 对象的根字段必须是 cases。"
     "params 中的参数值必须是具体的字符串或数字，不能是表达式或伪代码。"
 )
 
@@ -27,42 +28,103 @@ def _build_user_prompt(api_spec: dict) -> str:
         f"接口参数：\n{params_lines}\n"
         f"业务规则：{api_spec.get('rules', '无')}\n\n"
         "请生成覆盖正常、异常、边界场景的测试用例，输出格式：\n"
-        '[{"name": "用例名称", "params": {"参数名": "参数值"}, '
-        '"expected": "期望结果描述", "description": "测试意图"}]'
+        '{"cases": [{"name": "用例名称", "params": {"参数名": "参数值"}, '
+        '"expected": "期望结果描述", "description": "测试意图"}]}'
     )
 
 
+def _preview(value: object, limit: int = 200) -> str:
+    text = value if isinstance(value, str) else repr(value)
+    return text if len(text) <= limit else text[:limit] + "..."
+
+
+def _validate_cases(payload: object) -> list[dict]:
+    if not isinstance(payload, dict):
+        raise ValueError("DeepSeek output must be a JSON object")
+
+    cases = payload.get("cases")
+    if not isinstance(cases, list) or not cases:
+        raise ValueError("DeepSeek output 'cases' must be a non-empty list")
+
+    for index, case in enumerate(cases):
+        if not isinstance(case, dict):
+            raise ValueError(f"DeepSeek case at index {index} must be an object")
+
+        missing = _REQUIRED_CASE_FIELDS - case.keys()
+        if missing:
+            fields = ", ".join(sorted(missing))
+            raise ValueError(f"DeepSeek case at index {index} is missing fields: {fields}")
+
+        for field in ("name", "expected", "description"):
+            value = case[field]
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(
+                    f"DeepSeek case at index {index} field '{field}' "
+                    "must be a non-empty string"
+                )
+
+        if not isinstance(case["params"], dict):
+            raise ValueError(
+                f"DeepSeek case at index {index} field 'params' must be an object"
+            )
+
+    return cases
+
+
+def _extract_cases(response_data: object) -> list[dict]:
+    try:
+        choice = response_data["choices"][0]
+        content = choice["message"]["content"]
+    except (KeyError, IndexError, TypeError) as e:
+        raise ValueError(
+            "Unexpected DeepSeek response structure; "
+            f"response preview: {_preview(response_data)}"
+        ) from e
+
+    if choice.get("finish_reason") == "length":
+        raise ValueError("DeepSeek response was truncated; increase max_tokens")
+    if not isinstance(content, str) or not content.strip():
+        raise ValueError("DeepSeek returned empty content")
+
+    try:
+        payload = json.loads(content)
+    except json.JSONDecodeError as e:
+        raise ValueError(
+            "DeepSeek did not return valid JSON; "
+            f"content preview: {_preview(content)}"
+        ) from e
+
+    return _validate_cases(payload)
+
+
 def generate_cases(api_spec: dict) -> list[dict]:
-    api_key = os.environ.get("GLM_API_KEY")
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
     if not api_key:
-        raise EnvironmentError("GLM_API_KEY not found in environment")
+        raise EnvironmentError("DEEPSEEK_API_KEY not found in environment")
 
     resp = requests.post(
-        _GLM_URL,
+        _DEEPSEEK_URL,
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         },
         json={
-            "model": _GLM_MODEL,
+            "model": _DEEPSEEK_MODEL,
             "messages": [
                 {"role": "system", "content": _SYSTEM_PROMPT},
                 {"role": "user", "content": _build_user_prompt(api_spec)},
             ],
+            "thinking": {"type": "disabled"},
+            "response_format": {"type": "json_object"},
+            "max_tokens": 4096,
         },
         timeout=120,
     )
     resp.raise_for_status()
 
     try:
-        content = resp.json()["choices"][0]["message"]["content"].strip()
-    except (KeyError, IndexError) as e:
-        raise ValueError(f"Unexpected GLM response structure: {e}\nFull response: {resp.text}") from e
+        response_data = resp.json()
+    except ValueError as e:
+        raise ValueError("DeepSeek returned a non-JSON HTTP response") from e
 
-    if content.startswith("```"):
-        content = content.split("\n", 1)[1].rsplit("```", 1)[0]
-
-    try:
-        return json.loads(content)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"GLM did not return valid JSON: {e}\nRaw content: {content}") from e
+    return _extract_cases(response_data)

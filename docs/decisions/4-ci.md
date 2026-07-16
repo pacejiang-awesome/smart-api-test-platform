@@ -36,7 +36,7 @@
 ### 关键约束
 
 - `pip install` 不加国内镜像——runner 在境外，PyPI 直连正常
-- 仅需 `AMAP_API_KEY` 一个 Secret，`GLM_API_KEY` 未参与测试流程
+- CI 仅需 `AMAP_API_KEY`；`DEEPSEEK_API_KEY` 不注入 CI，AI 单元测试使用模拟响应
 
 ---
 
