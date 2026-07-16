@@ -71,3 +71,31 @@
 **CD 脚本不应使用 `git pull`**。`git pull` 在历史发散时静默失败（退出码非 0
 但脚本 `|| true` 风格会吞掉错误），导致后续步骤用旧代码执行，问题极难察觉。
 部署脚本应始终使用 `git fetch + git reset --hard origin/<branch>`。
+
+---
+
+## 排错记录：远程命令失败再次被 CD 假绿掩盖（2026-07-16）
+
+### 现象
+
+GitHub Actions 中 CI 和 CD 都显示绿色，但腾讯云没有部署本次 DeepSeek 迁移提交。
+CD 日志显示服务器执行 `git fetch` 时出现 `GnuTLS recv error (-110)`，随后仍继续构建；
+独立的容器测试步骤又因第二次 SSH 握手被服务器重置而退出 1，但总任务依然成功。
+
+### 根本原因
+
+1. `appleboy/ssh-action@v1` 不会自动让多行远程脚本在首个命令失败时停止。
+2. `git fetch` 失败后，`git reset --hard origin/main` 使用服务器上过期的远端跟踪引用，实际回退并构建了旧提交 `948ba16`。
+3. 容器测试配置了 `continue-on-error: true`，真实失败被改写成绿色结论。
+4. 部署和测试使用两次独立 SSH 连接，增加了第二次连接瞬时失败的机会。
+
+### 修复与约束
+
+- 远程部署脚本首行使用 `set -e`，未显式处理的失败必须终止 CD。
+- `git fetch` 对瞬时 TLS 错误最多重试 3 次；耗尽后明确退出，不得继续构建。
+- 从 `workflow_run.head_sha` 传入 CI 已验证的提交，确认对象存在后直接 reset 到该 SHA，并再次比较 HEAD，避免部署移动中的分支头或过期引用。
+- 容器测试放入同一次 SSH 会话，删除 `continue-on-error`；pytest 失败必须让部署任务失败。
+- 只有预期允许失败的清理命令（停止或删除不存在的旧容器）可以保留 `|| true`。
+
+`appleboy/ssh-action` 官方已移除 `script_stop` 参数，推荐在脚本中显式使用 `set -e`：
+https://github.com/appleboy/ssh-action#ssh-command-settings

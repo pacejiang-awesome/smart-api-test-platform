@@ -13,15 +13,30 @@ jobs:
 
     steps:
       - name: Deploy to Tencent Cloud
+        env:
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ubuntu
           key: ${{ secrets.LIGHTHOUSESSH_PRIVATE_KEY }}
+          envs: DEPLOY_SHA
           script: |
+            set -e
             cd ~/smart-api-test-platform
-            git fetch origin
-            git reset --hard origin/main
+            for attempt in 1 2 3; do
+              if git fetch origin main; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "git fetch failed after 3 attempts" >&2
+                exit 1
+              fi
+              sleep 5
+            done
+            git cat-file -e "${DEPLOY_SHA}^{commit}"
+            git reset --hard "$DEPLOY_SHA"
+            test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"
             docker build -t smart-api-test-platform .
             docker stop smart-api-test-platform || true
             docker rm smart-api-test-platform || true
@@ -30,13 +45,4 @@ jobs:
               --env-file .env \
               -p 8000:8000 \
               smart-api-test-platform
-
-      - name: Run tests in container
-        continue-on-error: true
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ubuntu
-          key: ${{ secrets.LIGHTHOUSESSH_PRIVATE_KEY }}
-          script: |
             docker exec smart-api-test-platform pytest -v
