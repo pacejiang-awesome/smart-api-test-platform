@@ -99,3 +99,14 @@ CD 日志显示服务器执行 `git fetch` 时出现 `GnuTLS recv error (-110)`�
 
 `appleboy/ssh-action` 官方已移除 `script_stop` 参数，推荐在脚本中显式使用 `set -e`：
 https://github.com/appleboy/ssh-action#ssh-command-settings
+
+### 修复后验证与归档
+
+- 修复提交：`c903732 fix(cd): fail fast and deploy tested commit`
+- CI 运行 `29495187455` 成功，测试提交 SHA 为 `c903732a7d8d390d954e906aecda4fc68c9e605e`
+- CD 运行 `29495273950` 成功，远程日志明确显示 `HEAD is now at c903732`
+- 容器内 pytest 真实执行完成，最终结果为 `67 passed in 20.00s`
+- 修复后的部署和测试位于同一次 SSH 会话；日志中不再出现第二次 SSH 握手步骤
+
+本次事故已经闭环，没有遗留的部署操作或待确认问题。后续判断 CD 是否成功时，
+不能只看 GitHub Actions 的绿色结论，还必须确认远程 HEAD 与目标 SHA 一致，并检查 pytest 最终汇总。
